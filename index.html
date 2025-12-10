@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>デッサンスケール - Drawing Scale</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow: hidden;
+            background: #000;
+            touch-action: none;
+        }
+
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        button, select {
+            padding: 12px 20px;
+            font-size: 14px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        select {
+            min-width: 120px;
+        }
+
+        #error {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 59, 48, 0.95);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            display: none;
+            text-align: center;
+            max-width: 80%;
+            z-index: 200;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        label {
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 150px;
+        }
+
+        input[type="color"] {
+            width: 50px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <video id="video" playsinline autoplay></video>
+        <canvas id="overlay"></canvas>
+    </div>
+
+    <div id="controls">
+        <div class="control-group">
+            <label>スケールタイプ:</label>
+            <select id="scaleType">
+                <option value="grid">グリッド</option>
+                <option value="ruler">定規</option>
+                <option value="quarters">4分割（十字）</option>
+                <option value="thirds">三分割法</option>
+                <option value="golden">黄金比</option>
+                <option value="none">なし</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>フォーマット:</label>
+            <select id="format">
+                <option value="none">なし</option>
+                <option value="square">正方形 (1:1)</option>
+                <option value="4:3">4:3</option>
+                <option value="3:2">3:2</option>
+                <option value="16:9">16:9</option>
+                <option value="9:16">9:16 (縦)</option>
+                <option value="a4">A4 (210:297)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>色:</label>
+            <input type="color" id="scaleColor" value="#00ff00">
+        </div>
+
+        <div class="control-group">
+            <label>透明度:</label>
+            <input type="range" id="opacity" min="0" max="100" value="70">
+        </div>
+
+        <button id="switchCamera">カメラ切替</button>
+        <button id="capture">📷 撮影</button>
+        <button id="fullscreen">フルスクリーン</button>
+    </div>
+
+    <div id="error"></div>
+
+    <script>
+        const video = document.getElementById('video');
+        const overlay = document.getElementById('overlay');
+        const ctx = overlay.getContext('2d');
+        const errorDiv = document.getElementById('error');
+
+        const scaleTypeSelect = document.getElementById('scaleType');
+        const formatSelect = document.getElementById('format');
+        const colorInput = document.getElementById('scaleColor');
+        const opacityInput = document.getElementById('opacity');
+        const switchCameraBtn = document.getElementById('switchCamera');
+        const captureBtn = document.getElementById('capture');
+        const fullscreenBtn = document.getElementById('fullscreen');
+
+        let currentStream = null;
+        let facingMode = 'environment'; // 'user' for front camera, 'environment' for back camera
+
+        // Initialize camera
+        async function initCamera() {
+            try {
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                }
+
+                const constraints = {
+                    video: {
+                        facingMode: facingMode,
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    },
+                    audio: false
+                };
+
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = currentStream;
+
+                video.onloadedmetadata = () => {
+                    resizeOverlay();
+                };
+
+            } catch (err) {
+                showError('カメラへのアクセスに失敗しました: ' + err.message);
+            }
+        }
+
+        // Resize overlay to match video
+        function resizeOverlay() {
+            const rect = video.getBoundingClientRect();
+            overlay.width = video.videoWidth;
+            overlay.height = video.videoHeight;
+            overlay.style.width = rect.width + 'px';
+            overlay.style.height = rect.height + 'px';
+            drawScale();
+        }
+
+        // Draw scale overlay
+        function drawScale() {
+            ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+            const color = colorInput.value;
+            const opacity = opacityInput.value / 100;
+
+            // Convert hex to rgba
+            const r = parseInt(color.substr(1, 2), 16);
+            const g = parseInt(color.substr(3, 2), 16);
+            const b = parseInt(color.substr(5, 2), 16);
+            const strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+
+            ctx.strokeStyle = strokeStyle;
+            ctx.lineWidth = 2;
+
+            // Draw format overlay first and get the active drawing area
+            const bounds = drawFormat();
+
+            // Draw scale type within the bounds
+            const scaleType = scaleTypeSelect.value;
+            if (scaleType === 'none') return;
+
+            switch (scaleType) {
+                case 'grid':
+                    drawGrid(bounds);
+                    break;
+                case 'ruler':
+                    drawRuler(bounds);
+                    break;
+                case 'quarters':
+                    drawQuarters(bounds);
+                    break;
+                case 'thirds':
+                    drawThirds(bounds);
+                    break;
+                case 'golden':
+                    drawGoldenRatio(bounds);
+                    break;
+            }
+        }
+
+        function drawGrid(bounds) {
+            const { x, y, width, height } = bounds;
+            const gridSize = Math.min(width, height) / 10; // Auto-calculate grid size
+
+            // Vertical lines
+            for (let i = gridSize; i < width; i += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x + i, y);
+                ctx.lineTo(x + i, y + height);
+                ctx.stroke();
+            }
+
+            // Horizontal lines
+            for (let i = gridSize; i < height; i += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, y + i);
+                ctx.lineTo(x + width, y + i);
+                ctx.stroke();
+            }
+        }
+
+        function drawRuler(bounds) {
+            const { x, y, width, height } = bounds;
+            const spacing = Math.min(width, height) / 10;
+
+            // Top ruler
+            for (let i = 0; i < width; i += spacing / 5) {
+                const tickHeight = (Math.abs(i % spacing) < 0.01) ? 40 : 20;
+                ctx.beginPath();
+                ctx.moveTo(x + i, y);
+                ctx.lineTo(x + i, y + tickHeight);
+                ctx.stroke();
+            }
+
+            // Left ruler
+            for (let i = 0; i < height; i += spacing / 5) {
+                const tickWidth = (Math.abs(i % spacing) < 0.01) ? 40 : 20;
+                ctx.beginPath();
+                ctx.moveTo(x, y + i);
+                ctx.lineTo(x + tickWidth, y + i);
+                ctx.stroke();
+            }
+        }
+
+        function drawQuarters(bounds) {
+            const { x, y, width, height } = bounds;
+
+            // Vertical center line
+            ctx.beginPath();
+            ctx.moveTo(x + width / 2, y);
+            ctx.lineTo(x + width / 2, y + height);
+            ctx.stroke();
+
+            // Horizontal center line
+            ctx.beginPath();
+            ctx.moveTo(x, y + height / 2);
+            ctx.lineTo(x + width, y + height / 2);
+            ctx.stroke();
+        }
+
+        function drawThirds(bounds) {
+            const { x, y, width, height } = bounds;
+
+            // Vertical lines
+            ctx.beginPath();
+            ctx.moveTo(x + width / 3, y);
+            ctx.lineTo(x + width / 3, y + height);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x + width * 2 / 3, y);
+            ctx.lineTo(x + width * 2 / 3, y + height);
+            ctx.stroke();
+
+            // Horizontal lines
+            ctx.beginPath();
+            ctx.moveTo(x, y + height / 3);
+            ctx.lineTo(x + width, y + height / 3);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x, y + height * 2 / 3);
+            ctx.lineTo(x + width, y + height * 2 / 3);
+            ctx.stroke();
+        }
+
+        function drawGoldenRatio(bounds) {
+            const { x, y, width, height } = bounds;
+            const phi = 1.618;
+
+            // Vertical lines
+            ctx.beginPath();
+            ctx.moveTo(x + width / phi, y);
+            ctx.lineTo(x + width / phi, y + height);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x + width - width / phi, y);
+            ctx.lineTo(x + width - width / phi, y + height);
+            ctx.stroke();
+
+            // Horizontal lines
+            ctx.beginPath();
+            ctx.moveTo(x, y + height / phi);
+            ctx.lineTo(x + width, y + height / phi);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x, y + height - height / phi);
+            ctx.lineTo(x + width, y + height - height / phi);
+            ctx.stroke();
+        }
+
+        function drawFormat() {
+            const format = formatSelect.value;
+            const width = overlay.width;
+            const height = overlay.height;
+
+            if (format === 'none') {
+                // Return full canvas bounds
+                return { x: 0, y: 0, width: width, height: height };
+            }
+
+            let targetAspect;
+            switch (format) {
+                case 'square':
+                    targetAspect = 1; // 1:1
+                    break;
+                case '4:3':
+                    targetAspect = 4 / 3;
+                    break;
+                case '3:2':
+                    targetAspect = 3 / 2;
+                    break;
+                case '16:9':
+                    targetAspect = 16 / 9;
+                    break;
+                case '9:16':
+                    targetAspect = 9 / 16;
+                    break;
+                case 'a4':
+                    targetAspect = 210 / 297;
+                    break;
+                default:
+                    return { x: 0, y: 0, width: width, height: height };
+            }
+
+            // Calculate format rectangle dimensions
+            let formatWidth, formatHeight;
+            const currentAspect = width / height;
+
+            if (currentAspect > targetAspect) {
+                // Video is wider than target format
+                formatHeight = height;
+                formatWidth = height * targetAspect;
+            } else {
+                // Video is taller than target format
+                formatWidth = width;
+                formatHeight = width / targetAspect;
+            }
+
+            // Center the format rectangle
+            const x = (width - formatWidth) / 2;
+            const y = (height - formatHeight) / 2;
+
+            // Draw semi-transparent overlay outside the format area
+            const color = colorInput.value;
+            const opacity = opacityInput.value / 100;
+            const r = parseInt(color.substr(1, 2), 16);
+            const g = parseInt(color.substr(3, 2), 16);
+            const b = parseInt(color.substr(5, 2), 16);
+
+            ctx.fillStyle = `rgba(0, 0, 0, ${opacity * 0.7})`;
+
+            // Top overlay
+            ctx.fillRect(0, 0, width, y);
+            // Bottom overlay
+            ctx.fillRect(0, y + formatHeight, width, height - y - formatHeight);
+            // Left overlay
+            ctx.fillRect(0, y, x, formatHeight);
+            // Right overlay
+            ctx.fillRect(x + formatWidth, y, width - x - formatWidth, formatHeight);
+
+            // Draw format border
+            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x, y, formatWidth, formatHeight);
+
+            // Return the format bounds for scale drawing
+            return { x: x, y: y, width: formatWidth, height: formatHeight };
+        }
+
+        function captureImage() {
+            try {
+                // Get the current format bounds
+                const format = formatSelect.value;
+                const videoWidth = video.videoWidth;
+                const videoHeight = video.videoHeight;
+
+                let captureX = 0, captureY = 0, captureWidth = videoWidth, captureHeight = videoHeight;
+
+                if (format !== 'none') {
+                    // Calculate format bounds (same logic as drawFormat)
+                    let targetAspect;
+                    switch (format) {
+                        case 'square':
+                            targetAspect = 1;
+                            break;
+                        case '4:3':
+                            targetAspect = 4 / 3;
+                            break;
+                        case '3:2':
+                            targetAspect = 3 / 2;
+                            break;
+                        case '16:9':
+                            targetAspect = 16 / 9;
+                            break;
+                        case '9:16':
+                            targetAspect = 9 / 16;
+                            break;
+                        case 'a4':
+                            targetAspect = 210 / 297;
+                            break;
+                        default:
+                            targetAspect = null;
+                    }
+
+                    if (targetAspect) {
+                        const currentAspect = videoWidth / videoHeight;
+                        if (currentAspect > targetAspect) {
+                            captureHeight = videoHeight;
+                            captureWidth = videoHeight * targetAspect;
+                        } else {
+                            captureWidth = videoWidth;
+                            captureHeight = videoWidth / targetAspect;
+                        }
+                        captureX = (videoWidth - captureWidth) / 2;
+                        captureY = (videoHeight - captureHeight) / 2;
+                    }
+                }
+
+                // Create a temporary canvas for capture
+                const captureCanvas = document.createElement('canvas');
+                captureCanvas.width = captureWidth;
+                captureCanvas.height = captureHeight;
+                const captureCtx = captureCanvas.getContext('2d');
+
+                // Draw the video frame (cropped to format area)
+                captureCtx.drawImage(
+                    video,
+                    captureX, captureY, captureWidth, captureHeight,
+                    0, 0, captureWidth, captureHeight
+                );
+
+                // Draw the overlay (scale lines) on top
+                const scaleType = scaleTypeSelect.value;
+                if (scaleType !== 'none') {
+                    const color = colorInput.value;
+                    const opacity = opacityInput.value / 100;
+                    const r = parseInt(color.substr(1, 2), 16);
+                    const g = parseInt(color.substr(3, 2), 16);
+                    const b = parseInt(color.substr(5, 2), 16);
+
+                    captureCtx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+                    captureCtx.lineWidth = 2;
+
+                    const bounds = { x: 0, y: 0, width: captureWidth, height: captureHeight };
+
+                    switch (scaleType) {
+                        case 'grid':
+                            drawGridOnCanvas(captureCtx, bounds);
+                            break;
+                        case 'ruler':
+                            drawRulerOnCanvas(captureCtx, bounds);
+                            break;
+                        case 'quarters':
+                            drawQuartersOnCanvas(captureCtx, bounds);
+                            break;
+                        case 'thirds':
+                            drawThirdsOnCanvas(captureCtx, bounds);
+                            break;
+                        case 'golden':
+                            drawGoldenRatioOnCanvas(captureCtx, bounds);
+                            break;
+                    }
+                }
+
+                // Convert to blob and download
+                captureCanvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `desukeru_${new Date().getTime()}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }, 'image/png');
+
+                // Show success feedback
+                captureBtn.textContent = '✓ 保存しました';
+                setTimeout(() => {
+                    captureBtn.textContent = '📷 撮影';
+                }, 1500);
+
+            } catch (err) {
+                showError('画像の保存に失敗しました: ' + err.message);
+            }
+        }
+
+        // Helper functions for drawing on capture canvas
+        function drawGridOnCanvas(ctx, bounds) {
+            const { x, y, width, height } = bounds;
+            const gridSize = Math.min(width, height) / 10;
+            for (let i = gridSize; i < width; i += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x + i, y);
+                ctx.lineTo(x + i, y + height);
+                ctx.stroke();
+            }
+            for (let i = gridSize; i < height; i += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, y + i);
+                ctx.lineTo(x + width, y + i);
+                ctx.stroke();
+            }
+        }
+
+        function drawRulerOnCanvas(ctx, bounds) {
+            const { x, y, width, height } = bounds;
+            const spacing = Math.min(width, height) / 10;
+            for (let i = 0; i < width; i += spacing / 5) {
+                const tickHeight = (Math.abs(i % spacing) < 0.01) ? 40 : 20;
+                ctx.beginPath();
+                ctx.moveTo(x + i, y);
+                ctx.lineTo(x + i, y + tickHeight);
+                ctx.stroke();
+            }
+            for (let i = 0; i < height; i += spacing / 5) {
+                const tickWidth = (Math.abs(i % spacing) < 0.01) ? 40 : 20;
+                ctx.beginPath();
+                ctx.moveTo(x, y + i);
+                ctx.lineTo(x + tickWidth, y + i);
+                ctx.stroke();
+            }
+        }
+
+        function drawQuartersOnCanvas(ctx, bounds) {
+            const { x, y, width, height } = bounds;
+            ctx.beginPath();
+            ctx.moveTo(x + width / 2, y);
+            ctx.lineTo(x + width / 2, y + height);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y + height / 2);
+            ctx.lineTo(x + width, y + height / 2);
+            ctx.stroke();
+        }
+
+        function drawThirdsOnCanvas(ctx, bounds) {
+            const { x, y, width, height } = bounds;
+            ctx.beginPath();
+            ctx.moveTo(x + width / 3, y);
+            ctx.lineTo(x + width / 3, y + height);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x + width * 2 / 3, y);
+            ctx.lineTo(x + width * 2 / 3, y + height);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y + height / 3);
+            ctx.lineTo(x + width, y + height / 3);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y + height * 2 / 3);
+            ctx.lineTo(x + width, y + height * 2 / 3);
+            ctx.stroke();
+        }
+
+        function drawGoldenRatioOnCanvas(ctx, bounds) {
+            const { x, y, width, height } = bounds;
+            const phi = 1.618;
+            ctx.beginPath();
+            ctx.moveTo(x + width / phi, y);
+            ctx.lineTo(x + width / phi, y + height);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x + width - width / phi, y);
+            ctx.lineTo(x + width - width / phi, y + height);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y + height / phi);
+            ctx.lineTo(x + width, y + height / phi);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y + height - height / phi);
+            ctx.lineTo(x + width, y + height - height / phi);
+            ctx.stroke();
+        }
+
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Event listeners
+        scaleTypeSelect.addEventListener('change', drawScale);
+        formatSelect.addEventListener('change', drawScale);
+        colorInput.addEventListener('input', drawScale);
+        opacityInput.addEventListener('input', drawScale);
+
+        switchCameraBtn.addEventListener('click', () => {
+            facingMode = facingMode === 'environment' ? 'user' : 'environment';
+            initCamera();
+        });
+
+        captureBtn.addEventListener('click', captureImage);
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        window.addEventListener('resize', resizeOverlay);
+        screen.orientation?.addEventListener('change', resizeOverlay);
+
+        // Start the app
+        initCamera();
+
+        // Redraw scale periodically to keep it smooth
+        setInterval(drawScale, 100);
+    </script>
+</body>
+</html>
