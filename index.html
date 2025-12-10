@@ -33,17 +33,18 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            max-width: 85%;
-            max-height: 85%;
+            max-width: 100%;
+            max-height: 100%;
             width: auto;
             height: auto;
         }
 
         #overlay {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
             z-index: 10;
         }
@@ -386,13 +387,10 @@
             }
         }
 
-        // Resize overlay to match video
+        // Resize overlay to match container
         function resizeOverlay() {
-            const rect = video.getBoundingClientRect();
-            overlay.width = video.videoWidth;
-            overlay.height = video.videoHeight;
-            overlay.style.width = rect.width + 'px';
-            overlay.style.height = rect.height + 'px';
+            overlay.width = window.innerWidth;
+            overlay.height = window.innerHeight;
             drawScale();
         }
 
@@ -554,12 +552,21 @@
 
         function drawFormat(r, g, b, opacity) {
             const format = formatSelect.value;
-            const width = overlay.width;
-            const height = overlay.height;
+
+            // Get video's actual display position and size
+            const videoRect = video.getBoundingClientRect();
+            const videoDisplayWidth = videoRect.width;
+            const videoDisplayHeight = videoRect.height;
+            const videoX = (overlay.width - videoDisplayWidth) / 2;
+            const videoY = (overlay.height - videoDisplayHeight) / 2;
 
             if (format === 'none') {
-                // Return full canvas bounds
-                return { x: 0, y: 0, width: width, height: height };
+                // Return full video display bounds at 85% scale
+                const scaledWidth = videoDisplayWidth * 0.85;
+                const scaledHeight = videoDisplayHeight * 0.85;
+                const scaledX = videoX + (videoDisplayWidth - scaledWidth) / 2;
+                const scaledY = videoY + (videoDisplayHeight - scaledHeight) / 2;
+                return { x: scaledX, y: scaledY, width: scaledWidth, height: scaledHeight };
             }
 
             let targetAspect;
@@ -583,38 +590,44 @@
                     targetAspect = 210 / 297;
                     break;
                 default:
-                    return { x: 0, y: 0, width: width, height: height };
+                    const scaledWidth = videoDisplayWidth * 0.85;
+                    const scaledHeight = videoDisplayHeight * 0.85;
+                    const scaledX = videoX + (videoDisplayWidth - scaledWidth) / 2;
+                    const scaledY = videoY + (videoDisplayHeight - scaledHeight) / 2;
+                    return { x: scaledX, y: scaledY, width: scaledWidth, height: scaledHeight };
             }
 
-            // Calculate format rectangle dimensions
+            // Calculate format at 85% of video size
+            const baseWidth = videoDisplayWidth * 0.85;
+            const baseHeight = videoDisplayHeight * 0.85;
+            const currentAspect = baseWidth / baseHeight;
+
             let formatWidth, formatHeight;
-            const currentAspect = width / height;
-
             if (currentAspect > targetAspect) {
-                // Video is wider than target format
-                formatHeight = height;
-                formatWidth = height * targetAspect;
+                // Base is wider than target format
+                formatHeight = baseHeight;
+                formatWidth = baseHeight * targetAspect;
             } else {
-                // Video is taller than target format
-                formatWidth = width;
-                formatHeight = width / targetAspect;
+                // Base is taller than target format
+                formatWidth = baseWidth;
+                formatHeight = baseWidth / targetAspect;
             }
 
-            // Center the format rectangle
-            const x = (width - formatWidth) / 2;
-            const y = (height - formatHeight) / 2;
+            // Center the format rectangle within video display area
+            const x = videoX + (videoDisplayWidth - formatWidth) / 2;
+            const y = videoY + (videoDisplayHeight - formatHeight) / 2;
 
             // Draw semi-transparent overlay outside the format area
             ctx.fillStyle = `rgba(0, 0, 0, ${opacity * 0.7})`;
 
             // Top overlay
-            ctx.fillRect(0, 0, width, y);
+            ctx.fillRect(0, 0, overlay.width, y);
             // Bottom overlay
-            ctx.fillRect(0, y + formatHeight, width, height - y - formatHeight);
+            ctx.fillRect(0, y + formatHeight, overlay.width, overlay.height - y - formatHeight);
             // Left overlay
             ctx.fillRect(0, y, x, formatHeight);
             // Right overlay
-            ctx.fillRect(x + formatWidth, y, width - x - formatWidth, formatHeight);
+            ctx.fillRect(x + formatWidth, y, overlay.width - x - formatWidth, formatHeight);
 
             // Draw format border
             ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
