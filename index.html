@@ -561,12 +561,8 @@
             const videoY = (overlay.height - videoDisplayHeight) / 2;
 
             if (format === 'none') {
-                // Return full video display bounds at 85% scale
-                const scaledWidth = videoDisplayWidth * 0.85;
-                const scaledHeight = videoDisplayHeight * 0.85;
-                const scaledX = videoX + (videoDisplayWidth - scaledWidth) / 2;
-                const scaledY = videoY + (videoDisplayHeight - scaledHeight) / 2;
-                return { x: scaledX, y: scaledY, width: scaledWidth, height: scaledHeight };
+                // Return full video display bounds (no scaling for format=none)
+                return { x: videoX, y: videoY, width: videoDisplayWidth, height: videoDisplayHeight };
             }
 
             let targetAspect;
