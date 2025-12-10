@@ -50,7 +50,7 @@
 
         #controls {
             position: fixed;
-            bottom: 20px;
+            bottom: 120px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 100;
@@ -58,11 +58,11 @@
             border-radius: 12px;
             backdrop-filter: blur(10px);
             max-width: 90%;
-            display: none;
+            display: block;
         }
 
-        #controls.visible {
-            display: block;
+        #controls.hidden {
+            display: none;
         }
 
         #controlsContent {
@@ -195,7 +195,7 @@
         <canvas id="overlay"></canvas>
     </div>
 
-    <button id="toggleControls">⚙️</button>
+    <button id="toggleControls">✕</button>
     <button id="captureButton">📷</button>
 
     <div id="controls">
@@ -752,7 +752,8 @@
         opacityInput.addEventListener('input', drawScale);
 
         toggleControlsBtn.addEventListener('click', () => {
-            controlsDiv.classList.toggle('visible');
+            const isHidden = controlsDiv.classList.toggle('hidden');
+            toggleControlsBtn.textContent = isHidden ? '⚙️' : '✕';
         });
 
         switchCameraBtn.addEventListener('click', () => {
