@@ -76,6 +76,19 @@
         }
 
         #toggleControls {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 100, 100, 0.9);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        #openControls {
             position: fixed;
             top: 20px;
             right: 20px;
@@ -89,10 +102,14 @@
             background: rgba(0, 0, 0, 0.5);
             color: white;
             cursor: pointer;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             backdrop-filter: blur(10px);
+        }
+
+        #openControls.visible {
+            display: flex;
         }
 
         #captureButton {
@@ -123,9 +140,25 @@
 
         #actionButtons {
             display: flex;
+            flex-direction: column;
             gap: 10px;
             justify-content: center;
             padding: 10px;
+            width: 100%;
+        }
+
+        #actionButtons button {
+            padding: 16px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            width: 100%;
+            min-height: 50px;
         }
 
         button, select {
@@ -195,7 +228,7 @@
         <canvas id="overlay"></canvas>
     </div>
 
-    <button id="toggleControls">✕</button>
+    <button id="openControls">⚙️</button>
     <button id="captureButton">📷</button>
 
     <div id="controls">
@@ -238,9 +271,10 @@
 
         <div id="actionButtons">
             <button id="switchCamera">カメラ切替</button>
-            <button id="capture">📷 撮影</button>
             <button id="fullscreen">フルスクリーン</button>
         </div>
+
+        <button id="toggleControls">✕ 閉じる</button>
     </div>
 
     <div id="error"></div>
@@ -259,6 +293,7 @@
         const captureBtn = document.getElementById('captureButton');
         const fullscreenBtn = document.getElementById('fullscreen');
         const toggleControlsBtn = document.getElementById('toggleControls');
+        const openControlsBtn = document.getElementById('openControls');
         const controlsDiv = document.getElementById('controls');
 
         let currentStream = null;
@@ -752,8 +787,13 @@
         opacityInput.addEventListener('input', drawScale);
 
         toggleControlsBtn.addEventListener('click', () => {
-            const isHidden = controlsDiv.classList.toggle('hidden');
-            toggleControlsBtn.textContent = isHidden ? '⚙️' : '✕';
+            controlsDiv.classList.add('hidden');
+            openControlsBtn.classList.add('visible');
+        });
+
+        openControlsBtn.addEventListener('click', () => {
+            controlsDiv.classList.remove('hidden');
+            openControlsBtn.classList.remove('visible');
         });
 
         switchCameraBtn.addEventListener('click', () => {
