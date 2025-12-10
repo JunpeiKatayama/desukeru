@@ -54,14 +54,44 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 100;
-            display: flex;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            max-width: 90%;
+        }
+
+        #controlsContent {
+            display: none;
             gap: 10px;
             flex-wrap: wrap;
             justify-content: center;
             padding: 15px;
-            background: rgba(0, 0, 0, 0.7);
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        #controlsContent.expanded {
+            display: flex;
+        }
+
+        #toggleControls {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: none;
             border-radius: 12px;
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            cursor: pointer;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        #actionButtons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            padding: 10px;
         }
 
         button, select {
@@ -132,44 +162,50 @@
     </div>
 
     <div id="controls">
-        <div class="control-group">
-            <label>スケールタイプ:</label>
-            <select id="scaleType">
-                <option value="grid">グリッド</option>
-                <option value="ruler">定規</option>
-                <option value="quarters">4分割（十字）</option>
-                <option value="thirds">三分割法</option>
-                <option value="golden">黄金比</option>
-                <option value="none">なし</option>
-            </select>
+        <button id="toggleControls">⚙️ 設定</button>
+
+        <div id="controlsContent">
+            <div class="control-group">
+                <label>スケールタイプ:</label>
+                <select id="scaleType">
+                    <option value="grid">グリッド</option>
+                    <option value="ruler">定規</option>
+                    <option value="quarters">4分割（十字）</option>
+                    <option value="thirds">三分割法</option>
+                    <option value="golden">黄金比</option>
+                    <option value="none">なし</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>フォーマット:</label>
+                <select id="format">
+                    <option value="none">なし</option>
+                    <option value="square">正方形 (1:1)</option>
+                    <option value="4:3">4:3</option>
+                    <option value="3:2">3:2</option>
+                    <option value="16:9">16:9</option>
+                    <option value="9:16">9:16 (縦)</option>
+                    <option value="a4">A4 (210:297)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>色:</label>
+                <input type="color" id="scaleColor" value="#00ff00">
+            </div>
+
+            <div class="control-group">
+                <label>透明度:</label>
+                <input type="range" id="opacity" min="0" max="100" value="70">
+            </div>
         </div>
 
-        <div class="control-group">
-            <label>フォーマット:</label>
-            <select id="format">
-                <option value="none">なし</option>
-                <option value="square">正方形 (1:1)</option>
-                <option value="4:3">4:3</option>
-                <option value="3:2">3:2</option>
-                <option value="16:9">16:9</option>
-                <option value="9:16">9:16 (縦)</option>
-                <option value="a4">A4 (210:297)</option>
-            </select>
+        <div id="actionButtons">
+            <button id="switchCamera">カメラ切替</button>
+            <button id="capture">📷 撮影</button>
+            <button id="fullscreen">フルスクリーン</button>
         </div>
-
-        <div class="control-group">
-            <label>色:</label>
-            <input type="color" id="scaleColor" value="#00ff00">
-        </div>
-
-        <div class="control-group">
-            <label>透明度:</label>
-            <input type="range" id="opacity" min="0" max="100" value="70">
-        </div>
-
-        <button id="switchCamera">カメラ切替</button>
-        <button id="capture">📷 撮影</button>
-        <button id="fullscreen">フルスクリーン</button>
     </div>
 
     <div id="error"></div>
@@ -187,6 +223,8 @@
         const switchCameraBtn = document.getElementById('switchCamera');
         const captureBtn = document.getElementById('capture');
         const fullscreenBtn = document.getElementById('fullscreen');
+        const toggleControlsBtn = document.getElementById('toggleControls');
+        const controlsContent = document.getElementById('controlsContent');
 
         let currentStream = null;
         let facingMode = 'environment'; // 'user' for front camera, 'environment' for back camera
@@ -682,6 +720,11 @@
         formatSelect.addEventListener('change', drawScale);
         colorInput.addEventListener('input', drawScale);
         opacityInput.addEventListener('input', drawScale);
+
+        toggleControlsBtn.addEventListener('click', () => {
+            controlsContent.classList.toggle('expanded');
+            toggleControlsBtn.textContent = controlsContent.classList.contains('expanded') ? '✕ 閉じる' : '⚙️ 設定';
+        });
 
         switchCameraBtn.addEventListener('click', () => {
             facingMode = facingMode === 'environment' ? 'user' : 'environment';
