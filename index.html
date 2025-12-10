@@ -197,6 +197,54 @@
             z-index: 200;
         }
 
+        #imagePreview {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 300;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #imagePreview.visible {
+            display: flex;
+        }
+
+        #imagePreview img {
+            max-width: 90%;
+            max-height: 70vh;
+            border-radius: 8px;
+        }
+
+        #imagePreview .instructions {
+            color: white;
+            font-size: 16px;
+            margin-top: 20px;
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            max-width: 80%;
+        }
+
+        #imagePreview button {
+            margin-top: 20px;
+            padding: 15px 40px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
         .control-group {
             display: flex;
             gap: 10px;
@@ -279,11 +327,22 @@
 
     <div id="error"></div>
 
+    <div id="imagePreview">
+        <img id="previewImage" src="" alt="撮影した画像">
+        <div class="instructions">
+            📱 画像を長押しして「写真に追加」を選択してください
+        </div>
+        <button id="closePreview">閉じる</button>
+    </div>
+
     <script>
         const video = document.getElementById('video');
         const overlay = document.getElementById('overlay');
         const ctx = overlay.getContext('2d');
         const errorDiv = document.getElementById('error');
+        const imagePreviewDiv = document.getElementById('imagePreview');
+        const previewImage = document.getElementById('previewImage');
+        const closePreviewBtn = document.getElementById('closePreview');
 
         const scaleTypeSelect = document.getElementById('scaleType');
         const formatSelect = document.getElementById('format');
@@ -661,15 +720,10 @@
                     }
                 }
 
-                // Convert to blob and download
-                captureCanvas.toBlob((blob) => {
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `desukeru_${new Date().getTime()}.png`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                }, 'image/png');
+                // Convert to data URL and show preview
+                const dataUrl = captureCanvas.toDataURL('image/png');
+                previewImage.src = dataUrl;
+                imagePreviewDiv.classList.add('visible');
 
                 // Show success feedback
                 captureBtn.textContent = '✓';
@@ -802,6 +856,11 @@
         });
 
         captureBtn.addEventListener('click', captureImage);
+
+        closePreviewBtn.addEventListener('click', () => {
+            imagePreviewDiv.classList.remove('visible');
+            previewImage.src = '';
+        });
 
         fullscreenBtn.addEventListener('click', () => {
             if (!document.fullscreenElement) {
