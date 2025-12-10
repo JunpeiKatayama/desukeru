@@ -58,10 +58,15 @@
             border-radius: 12px;
             backdrop-filter: blur(10px);
             max-width: 90%;
+            display: none;
+        }
+
+        #controls.visible {
+            display: block;
         }
 
         #controlsContent {
-            display: none;
+            display: flex;
             gap: 10px;
             flex-wrap: wrap;
             justify-content: center;
@@ -70,21 +75,50 @@
             overflow-y: auto;
         }
 
-        #controlsContent.expanded {
+        #toggleControls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 101;
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            font-size: 24px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            cursor: pointer;
             display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
         }
 
-        #toggleControls {
-            width: 100%;
-            padding: 15px;
-            font-size: 16px;
-            border: none;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.95);
-            color: #333;
+        #captureButton {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 101;
+            width: 70px;
+            height: 70px;
+            padding: 0;
+            font-size: 32px;
+            border: 4px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.4);
+            color: white;
             cursor: pointer;
-            font-weight: 600;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s;
+        }
+
+        #captureButton:active {
+            transform: translateX(-50%) scale(0.9);
         }
 
         #actionButtons {
@@ -161,9 +195,10 @@
         <canvas id="overlay"></canvas>
     </div>
 
-    <div id="controls">
-        <button id="toggleControls">⚙️ 設定</button>
+    <button id="toggleControls">⚙️</button>
+    <button id="captureButton">📷</button>
 
+    <div id="controls">
         <div id="controlsContent">
             <div class="control-group">
                 <label>スケールタイプ:</label>
@@ -221,10 +256,10 @@
         const colorInput = document.getElementById('scaleColor');
         const opacityInput = document.getElementById('opacity');
         const switchCameraBtn = document.getElementById('switchCamera');
-        const captureBtn = document.getElementById('capture');
+        const captureBtn = document.getElementById('captureButton');
         const fullscreenBtn = document.getElementById('fullscreen');
         const toggleControlsBtn = document.getElementById('toggleControls');
-        const controlsContent = document.getElementById('controlsContent');
+        const controlsDiv = document.getElementById('controls');
 
         let currentStream = null;
         let facingMode = 'environment'; // 'user' for front camera, 'environment' for back camera
@@ -278,17 +313,18 @@
             const r = parseInt(color.substr(1, 2), 16);
             const g = parseInt(color.substr(3, 2), 16);
             const b = parseInt(color.substr(5, 2), 16);
-            const strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-
-            ctx.strokeStyle = strokeStyle;
-            ctx.lineWidth = 2;
 
             // Draw format overlay first and get the active drawing area
-            const bounds = drawFormat();
+            const bounds = drawFormat(r, g, b, opacity);
 
             // Draw scale type within the bounds
             const scaleType = scaleTypeSelect.value;
             if (scaleType === 'none') return;
+
+            // Set stroke style for scale lines (after drawFormat)
+            const strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+            ctx.strokeStyle = strokeStyle;
+            ctx.lineWidth = 2;
 
             switch (scaleType) {
                 case 'grid':
@@ -422,7 +458,7 @@
             ctx.stroke();
         }
 
-        function drawFormat() {
+        function drawFormat(r, g, b, opacity) {
             const format = formatSelect.value;
             const width = overlay.width;
             const height = overlay.height;
@@ -475,12 +511,6 @@
             const y = (height - formatHeight) / 2;
 
             // Draw semi-transparent overlay outside the format area
-            const color = colorInput.value;
-            const opacity = opacityInput.value / 100;
-            const r = parseInt(color.substr(1, 2), 16);
-            const g = parseInt(color.substr(3, 2), 16);
-            const b = parseInt(color.substr(5, 2), 16);
-
             ctx.fillStyle = `rgba(0, 0, 0, ${opacity * 0.7})`;
 
             // Top overlay
@@ -607,9 +637,9 @@
                 }, 'image/png');
 
                 // Show success feedback
-                captureBtn.textContent = '✓ 保存しました';
+                captureBtn.textContent = '✓';
                 setTimeout(() => {
-                    captureBtn.textContent = '📷 撮影';
+                    captureBtn.textContent = '📷';
                 }, 1500);
 
             } catch (err) {
@@ -722,8 +752,7 @@
         opacityInput.addEventListener('input', drawScale);
 
         toggleControlsBtn.addEventListener('click', () => {
-            controlsContent.classList.toggle('expanded');
-            toggleControlsBtn.textContent = controlsContent.classList.contains('expanded') ? '✕ 閉じる' : '⚙️ 設定';
+            controlsDiv.classList.toggle('visible');
         });
 
         switchCameraBtn.addEventListener('click', () => {
