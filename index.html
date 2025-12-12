@@ -288,6 +288,7 @@
                     <option value="grid">グリッド</option>
                     <option value="ruler">定規</option>
                     <option value="quarters">4分割（十字）</option>
+                    <option value="quartersGrid">4分割16マス</option>
                     <option value="thirds">三分割法</option>
                     <option value="golden">黄金比</option>
                     <option value="none">なし</option>
@@ -428,6 +429,9 @@
                 case 'quarters':
                     drawQuarters(bounds);
                     break;
+                case 'quartersGrid':
+                    drawQuartersGrid(bounds);
+                    break;
                 case 'thirds':
                     drawThirds(bounds);
                     break;
@@ -495,6 +499,26 @@
             ctx.moveTo(x, y + height / 2);
             ctx.lineTo(x + width, y + height / 2);
             ctx.stroke();
+        }
+
+        function drawQuartersGrid(bounds) {
+            const { x, y, width, height } = bounds;
+
+            // Draw 3 vertical lines (creating 4 columns)
+            for (let i = 1; i <= 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(x + (width * i / 4), y);
+                ctx.lineTo(x + (width * i / 4), y + height);
+                ctx.stroke();
+            }
+
+            // Draw 3 horizontal lines (creating 4 rows)
+            for (let i = 1; i <= 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(x, y + (height * i / 4));
+                ctx.lineTo(x + width, y + (height * i / 4));
+                ctx.stroke();
+            }
         }
 
         function drawThirds(bounds) {
@@ -720,6 +744,9 @@
                         case 'quarters':
                             drawQuartersOnCanvas(captureCtx, bounds);
                             break;
+                        case 'quartersGrid':
+                            drawQuartersGridOnCanvas(captureCtx, bounds);
+                            break;
                         case 'thirds':
                             drawThirdsOnCanvas(captureCtx, bounds);
                             break;
@@ -792,6 +819,24 @@
             ctx.moveTo(x, y + height / 2);
             ctx.lineTo(x + width, y + height / 2);
             ctx.stroke();
+        }
+
+        function drawQuartersGridOnCanvas(ctx, bounds) {
+            const { x, y, width, height } = bounds;
+            // Draw 3 vertical lines (creating 4 columns)
+            for (let i = 1; i <= 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(x + (width * i / 4), y);
+                ctx.lineTo(x + (width * i / 4), y + height);
+                ctx.stroke();
+            }
+            // Draw 3 horizontal lines (creating 4 rows)
+            for (let i = 1; i <= 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(x, y + (height * i / 4));
+                ctx.lineTo(x + width, y + (height * i / 4));
+                ctx.stroke();
+            }
         }
 
         function drawThirdsOnCanvas(ctx, bounds) {
