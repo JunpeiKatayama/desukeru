@@ -12,11 +12,24 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --bg: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.08), transparent 35%), radial-gradient(circle at 80% 0%, rgba(0, 255, 170, 0.12), transparent 30%), #0c0d11;
+            --panel: rgba(20, 22, 28, 0.75);
+            --panel-stroke: rgba(255, 255, 255, 0.1);
+            --accent: #38e1b8;
+            --accent-strong: #4cf0c8;
+            --text: #eef3ff;
+            --muted: #9ea6b8;
+            --shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+            --radius: 14px;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: 'Poppins', 'Noto Sans JP', 'Segoe UI', sans-serif;
             overflow: hidden;
-            background: #000;
+            background: var(--bg);
             touch-action: none;
+            color: var(--text);
         }
 
         #container {
@@ -37,6 +50,22 @@
             max-height: 100%;
             width: auto;
             height: auto;
+            filter: saturate(1.05);
+        }
+
+        #uploadedImage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            display: none;
+            object-fit: contain;
+            touch-action: none;
+            filter: saturate(1.05);
         }
 
         #overlay {
@@ -47,19 +76,23 @@
             height: 100%;
             pointer-events: none;
             z-index: 10;
+            opacity: 0;
+            transition: opacity 0.25s ease;
         }
 
         #controls {
             position: fixed;
-            bottom: 120px;
+            bottom: 110px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 100;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
+            background: var(--panel);
+            border-radius: var(--radius);
+            backdrop-filter: blur(18px);
             max-width: 90%;
             display: block;
+            border: 1px solid var(--panel-stroke);
+            box-shadow: var(--shadow);
         }
 
         #controls.hidden {
@@ -67,11 +100,10 @@
         }
 
         #controlsContent {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            padding: 16px 16px 10px 16px;
             max-height: 60vh;
             overflow-y: auto;
         }
@@ -79,64 +111,87 @@
         #toggleControls {
             width: 100%;
             padding: 12px;
-            font-size: 18px;
+            font-size: 16px;
             border: none;
-            border-radius: 8px;
-            background: rgba(255, 100, 100, 0.9);
-            color: white;
+            border-radius: 0 0 var(--radius) var(--radius);
+            background: linear-gradient(120deg, #2b2d35, #20222a);
+            color: var(--text);
             cursor: pointer;
             font-weight: 600;
             text-align: center;
+            border-top: 1px solid var(--panel-stroke);
         }
 
         #openControls {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 16px;
+            right: 16px;
             z-index: 101;
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
             padding: 0;
-            font-size: 24px;
-            border: none;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
+            font-size: 20px;
+            border: 1px solid var(--panel-stroke);
+            border-radius: 14px;
+            background: var(--panel);
+            color: var(--text);
             cursor: pointer;
             display: none;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(14px);
+            box-shadow: var(--shadow);
         }
 
         #openControls.visible {
             display: flex;
         }
 
+        #openControls .icon-gear {
+            width: 22px;
+            height: 22px;
+            display: block;
+            background: center / contain no-repeat url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M69.7 18.7 67 34.1c-3.8 1-7.3 1-11.1 0l-2.7-15.4-9.7 4.2 4.6 14.6c-3 2.2-5.5 4.7-7.6 7.6L26 30.2l-4.2 9.7 15.4 2.7c-1 3.8-1 7.3 0 11.1L21.8 56l4.2 9.7 14.6-4.6c2.2 3 4.7 5.5 7.6 7.6L30.2 94l9.7 4.2 2.7-15.4c3.8 1 7.3 1 11.1 0l2.7 15.4 9.7-4.2-4.6-14.6c3-2.2 5.5-4.7 7.6-7.6l14.6 4.6 4.2-9.7-15.4-2.7c1-3.8 1-7.3 0-11.1l15.4-2.7-4.2-9.7-14.6 4.6c-2.2-3-4.7-5.5-7.6-7.6l4.6-14.6-9.7-4.2Z' fill='%23dff7ef'/%3E%3Ccircle cx='60' cy='60' r='16' fill='%230c0d11' stroke='%2338e1b8' stroke-width='6'/%3E%3C/svg%3E");
+        }
+
         #captureButton {
             position: fixed;
-            bottom: 30px;
+            bottom: 26px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 101;
-            width: 70px;
-            height: 70px;
+            width: 78px;
+            height: 78px;
             padding: 0;
             font-size: 32px;
-            border: 4px solid rgba(255, 255, 255, 0.8);
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.4);
-            color: white;
+            border: 3px solid rgba(255, 255, 255, 0.7);
+            border-radius: 22px;
+            background: linear-gradient(150deg, rgba(56, 225, 184, 0.18), rgba(56, 225, 184, 0.08));
+            color: var(--text);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             backdrop-filter: blur(10px);
-            transition: all 0.2s;
+            transition: all 0.18s;
+            box-shadow: var(--shadow);
         }
 
         #captureButton:active {
-            transform: translateX(-50%) scale(0.9);
+            transform: translateX(-50%) scale(0.94);
+            border-color: var(--accent);
+        }
+
+        #captureButton.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 6px rgba(56, 225, 184, 0.18), var(--shadow);
+        }
+
+        #captureButton .icon-camera {
+            width: 36px;
+            height: 26px;
+            display: block;
+            background: center / contain no-repeat url("data:image/svg+xml,%3Csvg width='120' height='90' viewBox='0 0 120 90' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='8' y='18' rx='10' ry='10' width='104' height='64' fill='none' stroke='%23dff7ef' stroke-width='6'/%3E%3Crect x='30' y='10' rx='6' ry='6' width='28' height='12' fill='%23dff7ef'/%3E%3Ccircle cx='60' cy='50' r='20' fill='none' stroke='%2338e1b8' stroke-width='6'/%3E%3Ccircle cx='96' cy='32' r='6' fill='%2338e1b8'/%3E%3C/svg%3E");
         }
 
         #actionButtons {
@@ -150,37 +205,52 @@
 
         #actionButtons button {
             padding: 16px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
+            font-size: 15px;
+            border: 1px solid var(--panel-stroke);
+            border-radius: 10px;
+            background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+            color: var(--text);
             cursor: pointer;
             font-weight: 600;
             transition: all 0.2s;
             width: 100%;
             min-height: 50px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
         }
 
         button, select {
             padding: 12px 20px;
             font-size: 14px;
-            border: none;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
+            border: 1px solid var(--panel-stroke);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
             cursor: pointer;
             font-weight: 600;
             transition: all 0.2s;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
         }
 
         button:active {
             transform: scale(0.95);
-            background: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.05);
         }
 
         select {
             min-width: 120px;
+            appearance: none;
+            background-image: linear-gradient(45deg, transparent 50%, var(--text) 50%), linear-gradient(135deg, var(--text) 50%, transparent 50%), linear-gradient(to right, rgba(255,255,255,0.05), rgba(255,255,255,0.05));
+            background-position: calc(100% - 16px) calc(50% - 3px), calc(100% - 11px) calc(50% - 3px), 0 0;
+            background-size: 6px 6px, 6px 6px, 100% 100%;
+            background-repeat: no-repeat;
+            padding-right: 32px;
+            background-color: var(--panel);
+            color-scheme: dark;
+        }
+
+        select option {
+            background: #0c0d11;
+            color: var(--text);
         }
 
         #error {
@@ -190,12 +260,13 @@
             transform: translate(-50%, -50%);
             background: rgba(255, 59, 48, 0.95);
             color: white;
-            padding: 20px 30px;
+            padding: 18px 26px;
             border-radius: 12px;
             display: none;
             text-align: center;
             max-width: 80%;
             z-index: 200;
+            box-shadow: var(--shadow);
         }
 
         #imagePreview {
@@ -204,13 +275,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(8, 10, 16, 0.9);
             z-index: 300;
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            backdrop-filter: blur(10px);
         }
 
         #imagePreview.visible {
@@ -220,65 +292,80 @@
         #imagePreview img {
             max-width: 90%;
             max-height: 70vh;
-            border-radius: 8px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
         }
 
         #imagePreview .instructions {
-            color: white;
-            font-size: 16px;
-            margin-top: 20px;
+            color: var(--text);
+            font-size: 15px;
+            margin-top: 16px;
             text-align: center;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
             max-width: 80%;
+            border: 1px solid var(--panel-stroke);
         }
 
         #imagePreview button {
-            margin-top: 20px;
-            padding: 15px 40px;
-            font-size: 16px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
+            margin-top: 18px;
+            padding: 14px 34px;
+            font-size: 15px;
+            background: linear-gradient(140deg, rgba(56, 225, 184, 0.2), rgba(56, 225, 184, 0.35));
+            color: var(--text);
+            border: 1px solid var(--panel-stroke);
+            border-radius: 10px;
+            font-weight: 700;
             cursor: pointer;
+            box-shadow: var(--shadow);
         }
 
         .control-group {
             display: flex;
             gap: 10px;
             align-items: center;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--panel-stroke);
         }
 
         label {
-            color: white;
-            font-size: 14px;
-            font-weight: 500;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+            min-width: 90px;
         }
 
         input[type="range"] {
             width: 150px;
+            accent-color: var(--accent);
         }
 
         input[type="color"] {
             width: 50px;
             height: 40px;
-            border: none;
+            border: 1px solid var(--panel-stroke);
             border-radius: 8px;
             cursor: pointer;
+            background: transparent;
         }
     </style>
 </head>
 <body>
     <div id="container">
         <video id="video" playsinline autoplay></video>
+        <img id="uploadedImage" alt="アップロード画像">
         <canvas id="overlay"></canvas>
     </div>
 
-    <button id="openControls">⚙️</button>
-    <button id="captureButton">📷</button>
+    <input type="file" id="imageInput" accept="image/*" style="display: none;">
+
+    <button id="openControls" aria-label="設定を開く">⚙️</button>
+    <button id="captureButton" aria-label="撮影">
+        <span class="icon-camera" aria-hidden="true"></span>
+    </button>
 
     <div id="controls">
         <div id="controlsContent">
@@ -320,6 +407,8 @@
         </div>
 
         <div id="actionButtons">
+            <button id="loadImage">画像を選択</button>
+            <button id="backToCamera" style="display: none;">カメラに戻す</button>
             <button id="switchCamera">カメラ切替</button>
             <button id="fullscreen">フルスクリーン</button>
         </div>
@@ -338,6 +427,7 @@
     </div>
 
     <script>
+        const container = document.getElementById('container');
         const video = document.getElementById('video');
         const overlay = document.getElementById('overlay');
         const ctx = overlay.getContext('2d');
@@ -345,6 +435,8 @@
         const imagePreviewDiv = document.getElementById('imagePreview');
         const previewImage = document.getElementById('previewImage');
         const closePreviewBtn = document.getElementById('closePreview');
+        const uploadedImage = document.getElementById('uploadedImage');
+        const imageInput = document.getElementById('imageInput');
 
         const scaleTypeSelect = document.getElementById('scaleType');
         const formatSelect = document.getElementById('format');
@@ -353,19 +445,46 @@
         const switchCameraBtn = document.getElementById('switchCamera');
         const captureBtn = document.getElementById('captureButton');
         const fullscreenBtn = document.getElementById('fullscreen');
+        const loadImageBtn = document.getElementById('loadImage');
+        const backToCameraBtn = document.getElementById('backToCamera');
         const toggleControlsBtn = document.getElementById('toggleControls');
         const openControlsBtn = document.getElementById('openControls');
         const controlsDiv = document.getElementById('controls');
 
         let currentStream = null;
         let facingMode = 'environment'; // 'user' for front camera, 'environment' for back camera
+        let mode = 'camera'; // 'camera' or 'image'
+        let hasRenderedOverlay = false;
+        const overlayState = {
+            centerX: 0.5, // normalized (0-1)
+            centerY: 0.5, // normalized (0-1)
+            scale: 0.85,
+            aspect: 16 / 9
+        };
+        const imageState = {
+            scale: 1,
+            tx: 0,
+            ty: 0,
+            baseScale: 1,
+            naturalWidth: 0,
+            naturalHeight: 0
+        };
+        let isPanning = false;
+        let lastPanPosition = { x: 0, y: 0 };
+        let gestureStart = null;
+        const activePointers = new Map();
+
+        function stopCamera() {
+            if (!currentStream) return;
+            currentStream.getTracks().forEach(track => track.stop());
+            currentStream = null;
+            video.srcObject = null;
+        }
 
         // Initialize camera
         async function initCamera() {
             try {
-                if (currentStream) {
-                    currentStream.getTracks().forEach(track => track.stop());
-                }
+                stopCamera();
 
                 const constraints = {
                     video: {
@@ -388,11 +507,153 @@
             }
         }
 
+        function switchToCameraMode() {
+            mode = 'camera';
+            uploadedImage.style.display = 'none';
+            uploadedImage.src = '';
+            backToCameraBtn.style.display = 'none';
+            video.style.display = 'block';
+            switchCameraBtn.disabled = false;
+            imageInput.value = '';
+            resetImageTransform();
+            initCamera();
+            resizeOverlay();
+        }
+
+        function switchToImageMode() {
+            mode = 'image';
+            video.style.display = 'none';
+            uploadedImage.style.display = 'block';
+            backToCameraBtn.style.display = 'block';
+            switchCameraBtn.disabled = true;
+            applyImageTransform();
+            resizeOverlay();
+        }
+
+        function handleImageSelection(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            const imageUrl = URL.createObjectURL(file);
+            uploadedImage.onload = () => {
+                imageState.naturalWidth = uploadedImage.naturalWidth;
+                imageState.naturalHeight = uploadedImage.naturalHeight;
+                resetImageTransform();
+                updateImageBaseScale();
+                URL.revokeObjectURL(imageUrl);
+                stopCamera();
+                switchToImageMode();
+            };
+            uploadedImage.onerror = () => {
+                showError('画像の読み込みに失敗しました');
+            };
+            uploadedImage.src = imageUrl;
+            imageInput.value = '';
+        }
+
         // Resize overlay to match container
         function resizeOverlay() {
             overlay.width = window.innerWidth;
             overlay.height = window.innerHeight;
+            if (mode === 'image' && imageState.naturalWidth) {
+                updateImageBaseScale();
+            }
+            overlayState.aspect = getTargetAspect(formatSelect.value);
+            clampOverlayToCanvas();
             drawScale();
+        }
+
+        function getActiveDisplayRect() {
+            if (mode === 'image' && uploadedImage.style.display !== 'none') {
+                const rect = uploadedImage.getBoundingClientRect();
+                if (rect.width && rect.height) {
+                    return rect;
+                }
+            }
+
+            const rect = video.getBoundingClientRect();
+            if (rect.width && rect.height) {
+                return rect;
+            }
+
+            return null;
+        }
+
+        function getTargetAspect(format) {
+            switch (format) {
+                case 'square':
+                    return 1;
+                case '4:3':
+                    return 4 / 3;
+                case '3:2':
+                    return 3 / 2;
+                case '16:9':
+                    return 16 / 9;
+                case '9:16':
+                    return 9 / 16;
+                case 'a4':
+                    return 210 / 297;
+                case 'none':
+                default:
+                    return overlay.height ? overlay.width / overlay.height : 1;
+            }
+        }
+
+        function updateOverlayAspect() {
+            overlayState.aspect = getTargetAspect(formatSelect.value);
+            clampOverlayToCanvas();
+            drawScale();
+        }
+
+        function clampOverlayToCanvas() {
+            let rect = getOverlayRect();
+
+            if (rect.width > overlay.width || rect.height > overlay.height) {
+                const scaleFix = Math.min(
+                    overlay.width / rect.width || 1,
+                    overlay.height / rect.height || 1
+                );
+                overlayState.scale = clampScale(overlayState.scale * scaleFix);
+                rect = getOverlayRect();
+            }
+            let centerX = rect.centerX;
+            let centerY = rect.centerY;
+            const halfW = rect.width / 2;
+            const halfH = rect.height / 2;
+            if (halfW === 0 || halfH === 0) return;
+
+            if (centerX - halfW < 0) centerX = halfW;
+            if (centerX + halfW > overlay.width) centerX = overlay.width - halfW;
+            if (centerY - halfH < 0) centerY = halfH;
+            if (centerY + halfH > overlay.height) centerY = overlay.height - halfH;
+
+            overlayState.centerX = overlay.width ? centerX / overlay.width : 0.5;
+            overlayState.centerY = overlay.height ? centerY / overlay.height : 0.5;
+        }
+
+        function getOverlayRect() {
+            const aspect = overlayState.aspect || (overlay.height ? overlay.width / overlay.height : 1);
+            const baseSize = Math.min(overlay.width, overlay.height) * overlayState.scale;
+            let width, height;
+            if (aspect >= 1) {
+                width = baseSize;
+                height = baseSize / aspect;
+            } else {
+                width = baseSize * aspect;
+                height = baseSize;
+            }
+            const centerX = overlayState.centerX * overlay.width;
+            const centerY = overlayState.centerY * overlay.height;
+            return { width, height, centerX, centerY, aspect };
+        }
+
+        function computeFormatBounds(format) {
+            overlayState.aspect = getTargetAspect(format);
+            clampOverlayToCanvas();
+            const rect = getOverlayRect();
+            const x = rect.centerX - rect.width / 2;
+            const y = rect.centerY - rect.height / 2;
+            return { x, y, width: rect.width, height: rect.height };
         }
 
         // Draw scale overlay
@@ -409,6 +670,11 @@
 
             // Draw format overlay first and get the active drawing area
             const bounds = drawFormat(r, g, b, opacity);
+            if (!bounds) return;
+            if (!hasRenderedOverlay) {
+                overlay.style.opacity = '1';
+                hasRenderedOverlay = true;
+            }
 
             // Draw scale type within the bounds
             const scaleType = scaleTypeSelect.value;
@@ -576,66 +842,10 @@
 
         function drawFormat(r, g, b, opacity) {
             const format = formatSelect.value;
+            const bounds = computeFormatBounds(format);
+            if (!bounds) return null;
 
-            // Get video's actual display position and size
-            const videoRect = video.getBoundingClientRect();
-            const videoDisplayWidth = videoRect.width;
-            const videoDisplayHeight = videoRect.height;
-            const videoX = (overlay.width - videoDisplayWidth) / 2;
-            const videoY = (overlay.height - videoDisplayHeight) / 2;
-
-            if (format === 'none') {
-                // Return full video display bounds (no scaling for format=none)
-                return { x: videoX, y: videoY, width: videoDisplayWidth, height: videoDisplayHeight };
-            }
-
-            let targetAspect;
-            switch (format) {
-                case 'square':
-                    targetAspect = 1; // 1:1
-                    break;
-                case '4:3':
-                    targetAspect = 4 / 3;
-                    break;
-                case '3:2':
-                    targetAspect = 3 / 2;
-                    break;
-                case '16:9':
-                    targetAspect = 16 / 9;
-                    break;
-                case '9:16':
-                    targetAspect = 9 / 16;
-                    break;
-                case 'a4':
-                    targetAspect = 210 / 297;
-                    break;
-                default:
-                    const scaledWidth = videoDisplayWidth * 0.85;
-                    const scaledHeight = videoDisplayHeight * 0.85;
-                    const scaledX = videoX + (videoDisplayWidth - scaledWidth) / 2;
-                    const scaledY = videoY + (videoDisplayHeight - scaledHeight) / 2;
-                    return { x: scaledX, y: scaledY, width: scaledWidth, height: scaledHeight };
-            }
-
-            // Calculate format at 85% of video size
-            const baseWidth = videoDisplayWidth * 0.85;
-            const baseHeight = videoDisplayHeight * 0.85;
-            const currentAspect = baseWidth / baseHeight;
-
-            let formatWidth, formatHeight;
-            if (currentAspect > targetAspect) {
-                // Base is wider than target format
-                formatHeight = baseHeight;
-                formatWidth = baseHeight * targetAspect;
-            } else {
-                // Base is taller than target format
-                formatWidth = baseWidth;
-                formatHeight = baseWidth / targetAspect;
-            }
-
-            // Center the format rectangle within video display area
-            const x = videoX + (videoDisplayWidth - formatWidth) / 2;
-            const y = videoY + (videoDisplayHeight - formatHeight) / 2;
+            const { x, y, width: formatWidth, height: formatHeight } = bounds;
 
             // Draw semi-transparent overlay outside the format area
             ctx.fillStyle = `rgba(0, 0, 0, ${opacity * 0.7})`;
@@ -658,114 +868,157 @@
             return { x: x, y: y, width: formatWidth, height: formatHeight };
         }
 
+        function clampScale(value) {
+            return Math.min(5, Math.max(0.2, value));
+        }
+
+        function setOverlayScale(newScale) {
+            overlayState.scale = clampScale(newScale);
+            clampOverlayToCanvas();
+            drawScale();
+        }
+
+        function moveOverlay(dx, dy) {
+            if (!overlay.width || !overlay.height) return;
+            overlayState.centerX += dx / overlay.width;
+            overlayState.centerY += dy / overlay.height;
+            clampOverlayToCanvas();
+            drawScale();
+        }
+
+        function updateImageBaseScale() {
+            if (!imageState.naturalWidth || !imageState.naturalHeight) return;
+            imageState.baseScale = Math.min(
+                window.innerWidth / imageState.naturalWidth,
+                window.innerHeight / imageState.naturalHeight
+            );
+            applyImageTransform();
+        }
+
+        function applyImageTransform() {
+            if (mode !== 'image' || !imageState.naturalWidth) return;
+            const displayWidth = imageState.naturalWidth * imageState.baseScale * imageState.scale;
+            const displayHeight = imageState.naturalHeight * imageState.baseScale * imageState.scale;
+
+            uploadedImage.style.width = `${displayWidth}px`;
+            uploadedImage.style.height = `${displayHeight}px`;
+            uploadedImage.style.transform = `translate(-50%, -50%) translate(${imageState.tx}px, ${imageState.ty}px)`;
+            drawScale();
+        }
+
+        function resetImageTransform() {
+            imageState.scale = 1;
+            imageState.tx = 0;
+            imageState.ty = 0;
+        }
+
+        function pointerDistance(p1, p2) {
+            const dx = p1.x - p2.x;
+            const dy = p1.y - p2.y;
+            return Math.hypot(dx, dy);
+        }
+
+        function pointerCenter(p1, p2) {
+            return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+        }
+
+        function drawSelectedScaleOnCanvas(ctx, bounds) {
+            const scaleType = scaleTypeSelect.value;
+            if (scaleType === 'none') return;
+
+            const color = colorInput.value;
+            const opacity = opacityInput.value / 100;
+            const r = parseInt(color.substr(1, 2), 16);
+            const g = parseInt(color.substr(3, 2), 16);
+            const b = parseInt(color.substr(5, 2), 16);
+
+            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+            ctx.lineWidth = 2;
+
+            switch (scaleType) {
+                case 'grid':
+                    drawGridOnCanvas(ctx, bounds);
+                    break;
+                case 'ruler':
+                    drawRulerOnCanvas(ctx, bounds);
+                    break;
+                case 'quarters':
+                    drawQuartersOnCanvas(ctx, bounds);
+                    break;
+                case 'quartersGrid':
+                    drawQuartersGridOnCanvas(ctx, bounds);
+                    break;
+                case 'thirds':
+                    drawThirdsOnCanvas(ctx, bounds);
+                    break;
+                case 'golden':
+                    drawGoldenRatioOnCanvas(ctx, bounds);
+                    break;
+            }
+        }
+
         function captureImage() {
             try {
-                // Get the current format bounds
                 const format = formatSelect.value;
-                const videoWidth = video.videoWidth;
-                const videoHeight = video.videoHeight;
+                let dataUrl = null;
 
-                let captureX = 0, captureY = 0, captureWidth = videoWidth, captureHeight = videoHeight;
-
-                if (format !== 'none') {
-                    // Calculate format bounds (same logic as drawFormat)
-                    let targetAspect;
-                    switch (format) {
-                        case 'square':
-                            targetAspect = 1;
-                            break;
-                        case '4:3':
-                            targetAspect = 4 / 3;
-                            break;
-                        case '3:2':
-                            targetAspect = 3 / 2;
-                            break;
-                        case '16:9':
-                            targetAspect = 16 / 9;
-                            break;
-                        case '9:16':
-                            targetAspect = 9 / 16;
-                            break;
-                        case 'a4':
-                            targetAspect = 210 / 297;
-                            break;
-                        default:
-                            targetAspect = null;
-                    }
-
-                    if (targetAspect) {
-                        const currentAspect = videoWidth / videoHeight;
-                        if (currentAspect > targetAspect) {
-                            captureHeight = videoHeight;
-                            captureWidth = videoHeight * targetAspect;
-                        } else {
-                            captureWidth = videoWidth;
-                            captureHeight = videoWidth / targetAspect;
-                        }
-                        captureX = (videoWidth - captureWidth) / 2;
-                        captureY = (videoHeight - captureHeight) / 2;
-                    }
+                const formatBounds = computeFormatBounds(format);
+                const displayRect = getActiveDisplayRect();
+                if (!formatBounds || !displayRect) {
+                    showError('表示中の領域を取得できませんでした');
+                    return;
                 }
 
-                // Create a temporary canvas for capture
+                const isImageMode = mode === 'image';
+                const naturalWidth = isImageMode ? uploadedImage.naturalWidth : video.videoWidth;
+                const naturalHeight = isImageMode ? uploadedImage.naturalHeight : video.videoHeight;
+                const sourceEl = isImageMode ? uploadedImage : video;
+
+                if (!naturalWidth || !naturalHeight) {
+                    showError(isImageMode ? '画像が読み込まれていません' : 'カメラの準備ができていません');
+                    return;
+                }
+
+                const scale = naturalWidth / displayRect.width;
+                if (!scale || !isFinite(scale)) {
+                    showError('スケール計算に失敗しました');
+                    return;
+                }
+
+                const captureWidth = Math.max(1, Math.round(formatBounds.width * scale));
+                const captureHeight = Math.max(1, Math.round(formatBounds.height * scale));
+                let offsetX = Math.round((formatBounds.x - displayRect.left) * scale);
+                let offsetY = Math.round((formatBounds.y - displayRect.top) * scale);
+
+                offsetX = Math.max(0, Math.min(naturalWidth - captureWidth, offsetX));
+                offsetY = Math.max(0, Math.min(naturalHeight - captureHeight, offsetY));
+
                 const captureCanvas = document.createElement('canvas');
                 captureCanvas.width = captureWidth;
                 captureCanvas.height = captureHeight;
                 const captureCtx = captureCanvas.getContext('2d');
 
-                // Draw the video frame (cropped to format area)
                 captureCtx.drawImage(
-                    video,
-                    captureX, captureY, captureWidth, captureHeight,
+                    sourceEl,
+                    offsetX, offsetY, captureWidth, captureHeight,
                     0, 0, captureWidth, captureHeight
                 );
 
-                // Draw the overlay (scale lines) on top
-                const scaleType = scaleTypeSelect.value;
-                if (scaleType !== 'none') {
-                    const color = colorInput.value;
-                    const opacity = opacityInput.value / 100;
-                    const r = parseInt(color.substr(1, 2), 16);
-                    const g = parseInt(color.substr(3, 2), 16);
-                    const b = parseInt(color.substr(5, 2), 16);
+                drawSelectedScaleOnCanvas(captureCtx, { x: 0, y: 0, width: captureWidth, height: captureHeight });
+                dataUrl = captureCanvas.toDataURL('image/png');
 
-                    captureCtx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-                    captureCtx.lineWidth = 2;
-
-                    const bounds = { x: 0, y: 0, width: captureWidth, height: captureHeight };
-
-                    switch (scaleType) {
-                        case 'grid':
-                            drawGridOnCanvas(captureCtx, bounds);
-                            break;
-                        case 'ruler':
-                            drawRulerOnCanvas(captureCtx, bounds);
-                            break;
-                        case 'quarters':
-                            drawQuartersOnCanvas(captureCtx, bounds);
-                            break;
-                        case 'quartersGrid':
-                            drawQuartersGridOnCanvas(captureCtx, bounds);
-                            break;
-                        case 'thirds':
-                            drawThirdsOnCanvas(captureCtx, bounds);
-                            break;
-                        case 'golden':
-                            drawGoldenRatioOnCanvas(captureCtx, bounds);
-                            break;
-                    }
+                if (!dataUrl) {
+                    showError('画像の生成に失敗しました');
+                    return;
                 }
 
-                // Convert to data URL and show preview
-                const dataUrl = captureCanvas.toDataURL('image/png');
                 previewImage.src = dataUrl;
                 imagePreviewDiv.classList.add('visible');
 
-                // Show success feedback
-                captureBtn.textContent = '✓';
+                captureBtn.classList.add('active');
                 setTimeout(() => {
-                    captureBtn.textContent = '📷';
-                }, 1500);
+                    captureBtn.classList.remove('active');
+                }, 700);
 
             } catch (err) {
                 showError('画像の保存に失敗しました: ' + err.message);
@@ -890,9 +1143,88 @@
 
         // Event listeners
         scaleTypeSelect.addEventListener('change', drawScale);
-        formatSelect.addEventListener('change', drawScale);
+        formatSelect.addEventListener('change', updateOverlayAspect);
         colorInput.addEventListener('input', drawScale);
         opacityInput.addEventListener('input', drawScale);
+        loadImageBtn.addEventListener('click', () => imageInput.click());
+        imageInput.addEventListener('change', handleImageSelection);
+        backToCameraBtn.addEventListener('click', switchToCameraMode);
+
+        container.addEventListener('wheel', (event) => {
+            event.preventDefault();
+            const factor = event.deltaY < 0 ? 1.1 : 0.9;
+            setOverlayScale(overlayState.scale * factor);
+        }, { passive: false });
+
+        container.addEventListener('pointerdown', (event) => {
+            event.preventDefault();
+            activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+            if (activePointers.size === 1) {
+                isPanning = true;
+                lastPanPosition = { x: event.clientX, y: event.clientY };
+                gestureStart = null;
+            } else if (activePointers.size === 2) {
+                const [p1, p2] = Array.from(activePointers.values());
+                gestureStart = {
+                    distance: pointerDistance(p1, p2),
+                    center: pointerCenter(p1, p2),
+                    scale: overlayState.scale,
+                    centerX: overlayState.centerX,
+                    centerY: overlayState.centerY
+                };
+                isPanning = false;
+            }
+            container.setPointerCapture(event.pointerId);
+        });
+
+        container.addEventListener('pointermove', (event) => {
+            if (!activePointers.has(event.pointerId)) return;
+            event.preventDefault();
+            activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+            if (activePointers.size === 2 && gestureStart) {
+                const [p1, p2] = Array.from(activePointers.values());
+                const distance = pointerDistance(p1, p2);
+                const center = pointerCenter(p1, p2);
+                const scaleFactor = distance / gestureStart.distance || 1;
+                overlayState.scale = clampScale(gestureStart.scale * scaleFactor);
+                overlayState.centerX = gestureStart.centerX + (center.x - gestureStart.center.x) / overlay.width;
+                overlayState.centerY = gestureStart.centerY + (center.y - gestureStart.center.y) / overlay.height;
+                clampOverlayToCanvas();
+                drawScale();
+                return;
+            }
+
+            if (isPanning && activePointers.size === 1) {
+                const current = activePointers.values().next().value;
+                const dx = current.x - lastPanPosition.x;
+                const dy = current.y - lastPanPosition.y;
+                lastPanPosition = { ...current };
+                moveOverlay(dx, dy);
+            }
+        });
+
+        function clearPointer(event) {
+            if (activePointers.has(event.pointerId)) {
+                activePointers.delete(event.pointerId);
+            }
+            if (activePointers.size < 2) {
+                gestureStart = null;
+            }
+            if (activePointers.size === 0) {
+                isPanning = false;
+            }
+        }
+
+        container.addEventListener('pointerup', (event) => {
+            clearPointer(event);
+        });
+        container.addEventListener('pointercancel', (event) => {
+            clearPointer(event);
+        });
+        container.addEventListener('pointerleave', (event) => {
+            clearPointer(event);
+        });
 
         toggleControlsBtn.addEventListener('click', () => {
             controlsDiv.classList.add('hidden');
@@ -905,6 +1237,7 @@
         });
 
         switchCameraBtn.addEventListener('click', () => {
+            if (mode !== 'camera') return;
             facingMode = facingMode === 'environment' ? 'user' : 'environment';
             initCamera();
         });
@@ -928,6 +1261,7 @@
         screen.orientation?.addEventListener('change', resizeOverlay);
 
         // Start the app
+        resizeOverlay();
         initCamera();
 
         // Redraw scale periodically to keep it smooth
