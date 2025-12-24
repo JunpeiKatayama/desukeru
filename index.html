@@ -515,6 +515,7 @@
             video.style.display = 'block';
             switchCameraBtn.disabled = false;
             imageInput.value = '';
+            resetOverlayState();
             resetImageTransform();
             initCamera();
             resizeOverlay();
@@ -540,6 +541,7 @@
                 imageState.naturalHeight = uploadedImage.naturalHeight;
                 resetImageTransform();
                 updateImageBaseScale();
+                resetOverlayState();
                 URL.revokeObjectURL(imageUrl);
                 stopCamera();
                 switchToImageMode();
@@ -882,6 +884,15 @@
             if (!overlay.width || !overlay.height) return;
             overlayState.centerX += dx / overlay.width;
             overlayState.centerY += dy / overlay.height;
+            clampOverlayToCanvas();
+            drawScale();
+        }
+
+        function resetOverlayState() {
+            overlayState.centerX = 0.5;
+            overlayState.centerY = 0.5;
+            overlayState.scale = 0.85;
+            overlayState.aspect = getTargetAspect(formatSelect.value);
             clampOverlayToCanvas();
             drawScale();
         }
