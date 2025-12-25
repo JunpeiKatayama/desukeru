@@ -483,15 +483,17 @@ const container = document.getElementById('container');
         }
 
         function updateHandlePositions() {
-            const rect = getOverlayRect();
-            if (!rect) return;
+            const format = formatSelect.value;
+            const bounds = computeFormatBounds(format);
+            if (!bounds) return;
+            const { x, y, width, height } = bounds;
             const size = 12; // matches .resize-handle width/height
             const offset = size / 2;
             const positions = {
-                nw: { x: rect.centerX - rect.width / 2 - offset, y: rect.centerY - rect.height / 2 - offset },
-                ne: { x: rect.centerX + rect.width / 2 - offset, y: rect.centerY - rect.height / 2 - offset },
-                sw: { x: rect.centerX - rect.width / 2 - offset, y: rect.centerY + rect.height / 2 - offset },
-                se: { x: rect.centerX + rect.width / 2 - offset, y: rect.centerY + rect.height / 2 - offset },
+                nw: { x: x - offset, y: y - offset },
+                ne: { x: x + width - offset, y: y - offset },
+                sw: { x: x - offset, y: y + height - offset },
+                se: { x: x + width - offset, y: y + height - offset },
             };
             resizeHandles.forEach(handle => {
                 const corner = handle.dataset.corner;
