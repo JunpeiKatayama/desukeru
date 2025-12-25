@@ -12,7 +12,6 @@ const container = document.getElementById('container');
         const scaleTypeSelect = document.getElementById('scaleType');
         const formatSelect = document.getElementById('format');
         const colorInput = document.getElementById('scaleColor');
-        const opacityInput = document.getElementById('opacity');
         const switchCameraBtn = document.getElementById('switchCamera');
         const captureBtn = document.getElementById('captureButton');
         const fullscreenBtn = document.getElementById('fullscreen');
@@ -248,7 +247,7 @@ const container = document.getElementById('container');
             ctx.clearRect(0, 0, overlay.width, overlay.height);
 
             const color = colorInput.value;
-            const opacity = opacityInput.value / 100;
+            const opacity = 0.5; // Fixed opacity at 50%
 
             // Convert hex to rgba
             const r = parseInt(color.substr(1, 2), 16);
@@ -271,7 +270,7 @@ const container = document.getElementById('container');
             // Set stroke style for scale lines (after drawFormat)
             const strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
             ctx.strokeStyle = strokeStyle;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1;
 
             switch (scaleType) {
                 case 'grid':
@@ -326,15 +325,17 @@ const container = document.getElementById('container');
             const { x, y, width, height } = bounds;
 
             // Vertical center line
+            const cx = Math.round(x + width / 2) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x + width / 2, y);
-            ctx.lineTo(x + width / 2, y + height);
+            ctx.moveTo(cx, y);
+            ctx.lineTo(cx, y + height);
             ctx.stroke();
 
             // Horizontal center line
+            const cy = Math.round(y + height / 2) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x, y + height / 2);
-            ctx.lineTo(x + width, y + height / 2);
+            ctx.moveTo(x, cy);
+            ctx.lineTo(x + width, cy);
             ctx.stroke();
         }
 
@@ -343,17 +344,19 @@ const container = document.getElementById('container');
 
             // Draw 3 vertical lines (creating 4 columns)
             for (let i = 1; i <= 3; i++) {
+                const vx = Math.round(x + (width * i / 4)) + 0.5;
                 ctx.beginPath();
-                ctx.moveTo(x + (width * i / 4), y);
-                ctx.lineTo(x + (width * i / 4), y + height);
+                ctx.moveTo(vx, y);
+                ctx.lineTo(vx, y + height);
                 ctx.stroke();
             }
 
             // Draw 3 horizontal lines (creating 4 rows)
             for (let i = 1; i <= 3; i++) {
+                const hy = Math.round(y + (height * i / 4)) + 0.5;
                 ctx.beginPath();
-                ctx.moveTo(x, y + (height * i / 4));
-                ctx.lineTo(x + width, y + (height * i / 4));
+                ctx.moveTo(x, hy);
+                ctx.lineTo(x + width, hy);
                 ctx.stroke();
             }
         }
@@ -362,25 +365,29 @@ const container = document.getElementById('container');
             const { x, y, width, height } = bounds;
 
             // Vertical lines
+            const v1 = Math.round(x + width / 3) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x + width / 3, y);
-            ctx.lineTo(x + width / 3, y + height);
+            ctx.moveTo(v1, y);
+            ctx.lineTo(v1, y + height);
             ctx.stroke();
 
+            const v2 = Math.round(x + width * 2 / 3) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x + width * 2 / 3, y);
-            ctx.lineTo(x + width * 2 / 3, y + height);
+            ctx.moveTo(v2, y);
+            ctx.lineTo(v2, y + height);
             ctx.stroke();
 
             // Horizontal lines
+            const h1 = Math.round(y + height / 3) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x, y + height / 3);
-            ctx.lineTo(x + width, y + height / 3);
+            ctx.moveTo(x, h1);
+            ctx.lineTo(x + width, h1);
             ctx.stroke();
 
+            const h2 = Math.round(y + height * 2 / 3) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x, y + height * 2 / 3);
-            ctx.lineTo(x + width, y + height * 2 / 3);
+            ctx.moveTo(x, h2);
+            ctx.lineTo(x + width, h2);
             ctx.stroke();
         }
 
@@ -389,25 +396,29 @@ const container = document.getElementById('container');
             const phi = 1.618;
 
             // Vertical lines
+            const v1 = Math.round(x + width / phi) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x + width / phi, y);
-            ctx.lineTo(x + width / phi, y + height);
+            ctx.moveTo(v1, y);
+            ctx.lineTo(v1, y + height);
             ctx.stroke();
 
+            const v2 = Math.round(x + width - width / phi) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x + width - width / phi, y);
-            ctx.lineTo(x + width - width / phi, y + height);
+            ctx.moveTo(v2, y);
+            ctx.lineTo(v2, y + height);
             ctx.stroke();
 
             // Horizontal lines
+            const h1 = Math.round(y + height / phi) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x, y + height / phi);
-            ctx.lineTo(x + width, y + height / phi);
+            ctx.moveTo(x, h1);
+            ctx.lineTo(x + width, h1);
             ctx.stroke();
 
+            const h2 = Math.round(y + height - height / phi) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x, y + height - height / phi);
-            ctx.lineTo(x + width, y + height - height / phi);
+            ctx.moveTo(x, h2);
+            ctx.lineTo(x + width, h2);
             ctx.stroke();
         }
 
@@ -430,10 +441,26 @@ const container = document.getElementById('container');
             // Right overlay
             ctx.fillRect(x + formatWidth, y, overlay.width - x - formatWidth, formatHeight);
 
-            // Draw format border
+            // Draw format border (pixel-perfect)
             ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-            ctx.lineWidth = 3;
-            ctx.strokeRect(x, y, formatWidth, formatHeight);
+            ctx.lineWidth = 2;
+            const bx = Math.round(x) + 1;
+            const by = Math.round(y) + 1;
+            const bw = Math.round(formatWidth) - 2;
+            const bh = Math.round(formatHeight) - 2;
+
+            ctx.beginPath();
+            // Top
+            ctx.moveTo(bx, by);
+            ctx.lineTo(bx + bw, by);
+            // Right
+            ctx.lineTo(bx + bw, by + bh);
+            // Bottom
+            ctx.lineTo(bx, by + bh);
+            // Left
+            ctx.lineTo(bx, by);
+            ctx.closePath();
+            ctx.stroke();
 
             // Return the format bounds for scale drawing
             return { x: x, y: y, width: formatWidth, height: formatHeight };
@@ -451,13 +478,14 @@ const container = document.getElementById('container');
                 overlayState.scale = clampScale(newScale);
             }
             clampOverlayToCanvas();
+            updateHandlePositions();
             drawScale();
         }
 
         function updateHandlePositions() {
             const rect = getOverlayRect();
             if (!rect) return;
-            const size = 10; // matches .resize-handle width/height
+            const size = 12; // matches .resize-handle width/height
             const offset = size / 2;
             const positions = {
                 nw: { x: rect.centerX - rect.width / 2 - offset, y: rect.centerY - rect.height / 2 - offset },
@@ -478,6 +506,7 @@ const container = document.getElementById('container');
             overlayState.centerX += dx / overlay.width;
             overlayState.centerY += dy / overlay.height;
             clampOverlayToCanvas();
+            updateHandlePositions();
             drawScale();
         }
 
@@ -533,13 +562,13 @@ const container = document.getElementById('container');
             if (scaleType === 'none') return;
 
             const color = colorInput.value;
-            const opacity = opacityInput.value / 100;
+            const opacity = 0.5; // Fixed opacity at 50%
             const r = parseInt(color.substr(1, 2), 16);
             const g = parseInt(color.substr(3, 2), 16);
             const b = parseInt(color.substr(5, 2), 16);
 
             ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1;
 
             switch (scaleType) {
                 case 'grid':
@@ -641,7 +670,7 @@ const container = document.getElementById('container');
             const offsetY = y + (height - rows * cellSize) / 2;
 
             targetCtx.save();
-            targetCtx.lineWidth = 1.2;
+            targetCtx.lineWidth = 1;
 
             for (let i = 1; i < cols; i++) {
                 const xpos = Math.round(offsetX + cellSize * i) + 0.5;
@@ -685,13 +714,15 @@ const container = document.getElementById('container');
 
         function drawQuartersOnCanvas(ctx, bounds) {
             const { x, y, width, height } = bounds;
+            const cx = Math.round(x + width / 2) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x + width / 2, y);
-            ctx.lineTo(x + width / 2, y + height);
+            ctx.moveTo(cx, y);
+            ctx.lineTo(cx, y + height);
             ctx.stroke();
+            const cy = Math.round(y + height / 2) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x, y + height / 2);
-            ctx.lineTo(x + width, y + height / 2);
+            ctx.moveTo(x, cy);
+            ctx.lineTo(x + width, cy);
             ctx.stroke();
         }
 
@@ -699,58 +730,68 @@ const container = document.getElementById('container');
             const { x, y, width, height } = bounds;
             // Draw 3 vertical lines (creating 4 columns)
             for (let i = 1; i <= 3; i++) {
+                const vx = Math.round(x + (width * i / 4)) + 0.5;
                 ctx.beginPath();
-                ctx.moveTo(x + (width * i / 4), y);
-                ctx.lineTo(x + (width * i / 4), y + height);
+                ctx.moveTo(vx, y);
+                ctx.lineTo(vx, y + height);
                 ctx.stroke();
             }
             // Draw 3 horizontal lines (creating 4 rows)
             for (let i = 1; i <= 3; i++) {
+                const hy = Math.round(y + (height * i / 4)) + 0.5;
                 ctx.beginPath();
-                ctx.moveTo(x, y + (height * i / 4));
-                ctx.lineTo(x + width, y + (height * i / 4));
+                ctx.moveTo(x, hy);
+                ctx.lineTo(x + width, hy);
                 ctx.stroke();
             }
         }
 
         function drawThirdsOnCanvas(ctx, bounds) {
             const { x, y, width, height } = bounds;
+            const v1 = Math.round(x + width / 3) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x + width / 3, y);
-            ctx.lineTo(x + width / 3, y + height);
+            ctx.moveTo(v1, y);
+            ctx.lineTo(v1, y + height);
             ctx.stroke();
+            const v2 = Math.round(x + width * 2 / 3) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x + width * 2 / 3, y);
-            ctx.lineTo(x + width * 2 / 3, y + height);
+            ctx.moveTo(v2, y);
+            ctx.lineTo(v2, y + height);
             ctx.stroke();
+            const h1 = Math.round(y + height / 3) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x, y + height / 3);
-            ctx.lineTo(x + width, y + height / 3);
+            ctx.moveTo(x, h1);
+            ctx.lineTo(x + width, h1);
             ctx.stroke();
+            const h2 = Math.round(y + height * 2 / 3) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x, y + height * 2 / 3);
-            ctx.lineTo(x + width, y + height * 2 / 3);
+            ctx.moveTo(x, h2);
+            ctx.lineTo(x + width, h2);
             ctx.stroke();
         }
 
         function drawGoldenRatioOnCanvas(ctx, bounds) {
             const { x, y, width, height } = bounds;
             const phi = 1.618;
+            const v1 = Math.round(x + width / phi) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x + width / phi, y);
-            ctx.lineTo(x + width / phi, y + height);
+            ctx.moveTo(v1, y);
+            ctx.lineTo(v1, y + height);
             ctx.stroke();
+            const v2 = Math.round(x + width - width / phi) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x + width - width / phi, y);
-            ctx.lineTo(x + width - width / phi, y + height);
+            ctx.moveTo(v2, y);
+            ctx.lineTo(v2, y + height);
             ctx.stroke();
+            const h1 = Math.round(y + height / phi) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x, y + height / phi);
-            ctx.lineTo(x + width, y + height / phi);
+            ctx.moveTo(x, h1);
+            ctx.lineTo(x + width, h1);
             ctx.stroke();
+            const h2 = Math.round(y + height - height / phi) + 0.5;
             ctx.beginPath();
-            ctx.moveTo(x, y + height - height / phi);
-            ctx.lineTo(x + width, y + height - height / phi);
+            ctx.moveTo(x, h2);
+            ctx.lineTo(x + width, h2);
             ctx.stroke();
         }
 
@@ -766,7 +807,6 @@ const container = document.getElementById('container');
         scaleTypeSelect.addEventListener('change', drawScale);
         formatSelect.addEventListener('change', updateOverlayAspect);
         colorInput.addEventListener('input', drawScale);
-        opacityInput.addEventListener('input', drawScale);
         loadImageBtn.addEventListener('click', () => imageInput.click());
         imageInput.addEventListener('change', handleImageSelection);
         backToCameraBtn.addEventListener('click', switchToCameraMode);
@@ -784,6 +824,7 @@ const container = document.getElementById('container');
                     overlayState.scaleY = clampScale(overlayState.scaleY * factor);
                 }
                 clampOverlayToCanvas();
+                updateHandlePositions();
                 drawScale();
                 return;
             }
@@ -880,6 +921,7 @@ const container = document.getElementById('container');
                 }
 
                 clampOverlayToCanvas();
+                updateHandlePositions();
                 drawScale();
                 return;
             }
@@ -905,6 +947,7 @@ const container = document.getElementById('container');
                 overlayState.centerX = gestureStart.centerX + (center.x - gestureStart.center.x) / overlay.width;
                 overlayState.centerY = gestureStart.centerY + (center.y - gestureStart.center.y) / overlay.height;
                 clampOverlayToCanvas();
+                updateHandlePositions();
                 drawScale();
                 return;
             }
