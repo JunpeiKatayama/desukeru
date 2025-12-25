@@ -12,6 +12,8 @@ const container = document.getElementById('container');
         const scaleTypeSelect = document.getElementById('scaleType');
         const formatSelect = document.getElementById('format');
         const colorInput = document.getElementById('scaleColor');
+        const lineWidthInput = document.getElementById('lineWidth');
+        const lineWidthValue = document.getElementById('lineWidthValue');
         const switchCameraBtn = document.getElementById('switchCamera');
         const captureBtn = document.getElementById('captureButton');
         const fullscreenBtn = document.getElementById('fullscreen');
@@ -270,7 +272,7 @@ const container = document.getElementById('container');
             // Set stroke style for scale lines (after drawFormat)
             const strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
             ctx.strokeStyle = strokeStyle;
-            ctx.lineWidth = scaleType === 'grid' ? 2 : 1;
+            ctx.lineWidth = parseInt(lineWidthInput.value);
 
             switch (scaleType) {
                 case 'grid':
@@ -594,7 +596,7 @@ const container = document.getElementById('container');
             const b = parseInt(color.substr(5, 2), 16);
 
             ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-            ctx.lineWidth = scaleType === 'grid' ? 2 : 1;
+            ctx.lineWidth = parseInt(lineWidthInput.value);
 
             switch (scaleType) {
                 case 'grid':
@@ -833,6 +835,10 @@ const container = document.getElementById('container');
         scaleTypeSelect.addEventListener('change', drawScale);
         formatSelect.addEventListener('change', updateOverlayAspect);
         colorInput.addEventListener('input', drawScale);
+        lineWidthInput.addEventListener('input', () => {
+            lineWidthValue.textContent = `${lineWidthInput.value}px`;
+            drawScale();
+        });
         loadImageBtn.addEventListener('click', () => imageInput.click());
         imageInput.addEventListener('change', handleImageSelection);
         backToCameraBtn.addEventListener('click', switchToCameraMode);
