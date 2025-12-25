@@ -270,7 +270,7 @@ const container = document.getElementById('container');
             // Set stroke style for scale lines (after drawFormat)
             const strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
             ctx.strokeStyle = strokeStyle;
-            ctx.lineWidth = 1;
+            ctx.lineWidth = scaleType === 'grid' ? 2 : 1;
 
             switch (scaleType) {
                 case 'grid':
@@ -594,7 +594,7 @@ const container = document.getElementById('container');
             const b = parseInt(color.substr(5, 2), 16);
 
             ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-            ctx.lineWidth = 1;
+            ctx.lineWidth = scaleType === 'grid' ? 2 : 1;
 
             switch (scaleType) {
                 case 'grid':
