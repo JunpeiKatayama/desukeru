@@ -462,6 +462,30 @@ const container = document.getElementById('container');
             ctx.closePath();
             ctx.stroke();
 
+            // Draw corner handles as small circles
+            const cornerRadius = 4;
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity * 1.5})`;
+
+            // Top-left
+            ctx.beginPath();
+            ctx.arc(bx, by, cornerRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Top-right
+            ctx.beginPath();
+            ctx.arc(bx + bw, by, cornerRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Bottom-left
+            ctx.beginPath();
+            ctx.arc(bx, by + bh, cornerRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Bottom-right
+            ctx.beginPath();
+            ctx.arc(bx + bw, by + bh, cornerRadius, 0, Math.PI * 2);
+            ctx.fill();
+
             // Return the format bounds for scale drawing
             return { x: x, y: y, width: formatWidth, height: formatHeight };
         }
